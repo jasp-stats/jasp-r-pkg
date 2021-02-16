@@ -5,11 +5,11 @@ rCodeValidator <- function(code) {
 
   result <- tryCatch(
     validateStringRCode(code),
-    invalidCodeError = function(e) { list(pass = "false", reason = e[["message"]])     },
-    error            = function(e) { list(pass = "false", reason = "unexpected error") }
+    invalidCodeError = function(e) { list(pass = FALSE, reason = e[["message"]])     },
+    error            = function(e) { list(pass = FALSE, reason = "unexpected error") }
   )
 
-  return(toJSON(result))
+  return(result) #Actually getting json back is not very practical. A list is better
 
 }
 
@@ -30,7 +30,7 @@ validateStringRCode <- function(rcode) {
 validateRExpression <- function(expr) {
   envir <- new.env(parent = baseenv())
   validateInner(expr, envir)
-  return(list(pass = "true", reason = ""))
+  return(list(pass = TRUE, reason = ""))
 }
 
 validateInner <- function(code, envir) {
@@ -98,15 +98,18 @@ is.loop <- function(x) {
 
 inWhiteList <- function(f) {
   # TODO: figure out if we can do this a little bit more efficiently. Perhaps in c++?
-  for (fun in whiteList)
-    if (identical(f, fun))
-      return(TRUE)
-  return(FALSE)
+  #for (fun in whiteList)
+  #  if (identical(f, fun))
+  #    return(TRUE)
+  #return(FALSE)
+
+  #Maybe like:
+  .isRFunctionInWhitelist(f)
 }
 
 # TODO: we need some way to fill this nicely... also we may want to prefixes the namespaces sometimes
 whiteList <- list(
-  list, `<-`, `{`, `[[`, print, `for`, `if`, `&&`, `||`, `c`, `+`, `-`, `/`, `*`, `:`, `>`, `body`, `function`, `c`
+  list, `<-`, `{`, `[[`, print, `for`, `if`, `&&`, `||`, `c`, `+`, `-`, `/`, `*`, `:`, `>`, `body`, `function`, `c`, `local`
 )
 
 invalidCodeError <- function(message) {
