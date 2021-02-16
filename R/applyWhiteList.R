@@ -36,20 +36,20 @@ validateRExpression <- function(expr) {
 validateInner <- function(code, envir) {
   for (i in seq_along(code)) {
     line <- code[[i]]
-    validateAndEval(line, envir)
+    validateAndEval(line, envir, i == 1L && is.call(code))
   }
 }
 
-validateAndEval <- function(expr, envir) {
+validateAndEval <- function(expr, envir, isfunction = FALSE) {
 
   if (is.symbol(expr)) {
 
-    validateSymbol(expr, envir = envir)
+    validateSymbol(expr, envir = envir, isfunction = isfunction)
     return()
 
   } else if (is.call(expr)) {
 
-    e <- try(print(expr))
+    try(print(expr))
 
     if (is.assignment(expr[[1L]])) {
 
@@ -71,13 +71,16 @@ validateAndEval <- function(expr, envir) {
   }
 }
 
-validateSymbol <- function(sym, envir) {
+validateSymbol <- function(sym, envir, isfunction) {
 
   if (!is.symbol(sym))
     return()
 
   name <- as.character(sym)
-  val  <- mget(name, envir = envir, ifnotfound = NA, inherits = TRUE)[[1L]]
+  val  <- mget(name, envir = envir,
+               ifnotfound = NA, inherits = TRUE,
+               mode = if (isfunction) "function" else "any"
+  )[[1L]]
   if (!is.function(val))
     return()
 
@@ -110,3 +113,23 @@ invalidCodeError <- function(message) {
   e <- structure(class = c('invalidCodeError', 'error', 'condition'), list(message=message, call=sys.call(-1)))
   stop(e)
 }
+
+# testing efficiency of lookups by pretending the whitelist consists of ~11000 functions
+# aa <- as.list(asNamespace("base"))
+# bb <- as.list(asNamespace("stats"))
+#
+# funs <- c(aa, bb)
+# funs <- c(funs, funs, funs, funs, funs)
+# foo <- function(f, lst) {
+#   for (fun in lst)
+#     if (identical(f, fun))
+#       return(TRUE)
+#   return(FALSE)
+# }
+#
+#
+# install.packages("bench")
+# bch <- bench::mark(expr1 = foo(adist, funs))
+# summary(bch, relative = TRUE)
+# length(funs)
+# bch
