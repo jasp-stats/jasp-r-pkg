@@ -1,5 +1,5 @@
 postInstallFixes <- function(folderToFix) {
-  if(length(ls(all.names=TRUE,pattern="\\..postProcessLibraryModule")) > 0 ) #We seem to be running in JASP
+  if(length(ls(all.names=TRUE,pattern=".postProcessLibraryModule")) > 0 ) #We seem to be running in JASP
   {
     print("we are *in* jasp, so we use .postProcessLibraryModule!")
     .postProcessLibraryModule(folderToFix)
